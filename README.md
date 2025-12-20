@@ -71,13 +71,22 @@ Pick one of the following. See the full providers list and details in the LiteLL
 - **Google Gemini**
   - Set your API key (Google AI Studio key):
     ```bash
-    export GOOGLE_API_KEY="..."
+    export GEMINI_API_KEY="..."
     ```
   - Example usage (pick a Gemini vision-capable model):
     ```bash
     markdownify input.pdf -o output.md --model gemini/gemini-2.5-flash
     ```
 
+- **OpenRouter**
+  - Set your API key (OpenRouter API Key):
+    ```bash
+    export OPENROUTER_API_KEY="..."
+    ```
+  - Example usage (pick a Gemini vision-capable model):
+    ```bash
+    markdownify input.pdf -o output.md --model openrouter/z-ai/glm-4.5v
+    ```
 - **Azure OpenAI**
   - Set these environment variables (values from your Azure OpenAI resource):
     ```bash
@@ -89,7 +98,7 @@ Pick one of the following. See the full providers list and details in the LiteLL
     ```bash
     markdownify input.pdf -o output.md --model azure/<deployment_name>
     ```
-  - See: [LiteLLM Azure OpenAI](https://docs.litellm.ai/docs/providers/azure_openai)
+  - See: [LiteLLM Azure OpenAI](https://docs.litellm.ai/docs/providers/azure/#overview)
 
 - **OpenAI-compatible APIs**
   - Many providers expose an OpenAI-compatible REST API. Set your API key and base URL:
@@ -111,6 +120,12 @@ For additional providers and advanced configuration (fallbacks, cost tracking, s
 - `--max-group-pages`: Max pages to merge for continued content (default 3)
 - `--no-grouping`: Disable LLM-based grouping
 - `--temperature`, `--max-tokens`: LLM generation params
+- `--grouping_concurrency` : to control how many checks are made at once (defaults to `concurrency`)
+
+## Markdownify Cloud
+If you’d like to run Markdownify in production with advanced features, on your own infrastructure, using your own LLMs, or tailored to your specific use case, visit [markdownify.xyz ](https://www.markdownify.xyz/) to explore our cloud offering and get in touch.
+
+Markdownify Cloud gives you access to better version of Markdownify that gives better results than the open-source version, with additional features and hands-on support to help you integrate it into your workflow.
 
 ### Attribution & License
 This project uses the Apache 2.0 License, which includes an attribution/NOTICE requirement. If you distribute or use this project, please keep the `LICENSE` and `NOTICE` files intact, crediting the original author, Sethu Pavan Venkata Reddy Pastula.
