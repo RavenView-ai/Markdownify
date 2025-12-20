@@ -6,9 +6,12 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
+
+
+LogLevel = Literal["quiet", "normal", "verbose", "debug"]
 
 
 class MarkdownifyConfig(BaseModel):
@@ -55,8 +58,43 @@ class MarkdownifyConfig(BaseModel):
         description="Max concurrent LLM requests for adjacent-page continuation checks (defaults to concurrency)",
     )
 
-    # Optional path where page images are cached for debugging
-    cache_dir: Optional[Path] = Field(None)
+    # Retry configuration
+    max_retries: int = Field(
+        3,
+        ge=0,
+        le=10,
+        description="Max retry attempts for failed LLM calls",
+    )
+    retry_delay: float = Field(
+        1.0,
+        ge=0.1,
+        le=60.0,
+        description="Initial delay between retries in seconds (exponential backoff)",
+    )
+
+    # Rate limiting
+    rate_limit_rpm: Optional[int] = Field(
+        None,
+        ge=1,
+        le=10000,
+        description="Max requests per minute (None = no limit)",
+    )
+
+    # Caching
+    enable_cache: bool = Field(
+        False,
+        description="Enable response caching to avoid redundant LLM calls",
+    )
+    cache_dir: Optional[Path] = Field(
+        None,
+        description="Directory for response cache (defaults to ~/.cache/llm-markdownify)",
+    )
+
+    # Logging
+    log_level: LogLevel = Field(
+        "normal",
+        description="Log verbosity: quiet, normal, verbose, debug",
+    )
 
     @field_validator("input_path")
     @classmethod

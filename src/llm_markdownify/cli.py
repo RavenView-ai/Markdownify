@@ -63,7 +63,35 @@ def run(
     allow_docx: bool = typer.Option(
         False, help="Allow DOCX via Word/COM conversion (not recommended). Prefer PDFs."
     ),
+    # Retry options
+    max_retries: int = typer.Option(3, help="Max retry attempts for failed LLM calls"),
+    retry_delay: float = typer.Option(
+        1.0, help="Initial delay between retries in seconds (exponential backoff)"
+    ),
+    # Rate limiting
+    rate_limit: Optional[int] = typer.Option(
+        None, "--rate-limit", help="Max requests per minute (None = no limit)"
+    ),
+    # Caching
+    cache: bool = typer.Option(
+        False, "--cache/--no-cache", help="Enable response caching to avoid redundant LLM calls"
+    ),
+    cache_dir: Optional[str] = typer.Option(
+        None, help="Directory for response cache (defaults to ~/.cache/llm-markdownify)"
+    ),
+    # Logging
+    verbose: bool = typer.Option(
+        False, "-v", "--verbose", help="Enable verbose logging (debug level)"
+    ),
+    quiet: bool = typer.Option(False, "-q", "--quiet", help="Suppress non-error output"),
 ):
+    # Determine log level
+    log_level = "normal"
+    if quiet:
+        log_level = "quiet"
+    elif verbose:
+        log_level = "verbose"
+
     cfg_kwargs = dict(
         input_path=Path(input_path),
         output_path=Path(output),
@@ -73,6 +101,10 @@ def run(
         temperature=temperature,
         concurrency=concurrency,
         allow_docx=allow_docx,
+        max_retries=max_retries,
+        retry_delay=retry_delay,
+        enable_cache=cache,
+        log_level=log_level,
     )
     if model:
         cfg_kwargs["model"] = model
@@ -80,6 +112,10 @@ def run(
         cfg_kwargs["max_tokens"] = max_tokens
     if grouping_concurrency is not None:
         cfg_kwargs["grouping_concurrency"] = grouping_concurrency
+    if rate_limit is not None:
+        cfg_kwargs["rate_limit_rpm"] = rate_limit
+    if cache_dir:
+        cfg_kwargs["cache_dir"] = Path(cache_dir)
 
     cfg = MarkdownifyConfig(**cfg_kwargs)
     Markdownifier(cfg, profile=profile).run()

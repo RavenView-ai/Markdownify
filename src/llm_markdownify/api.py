@@ -5,10 +5,12 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 
 from .config import MarkdownifyConfig
 from .markdownifier import Markdownifier
+
+LogLevel = Literal["quiet", "normal", "verbose", "debug"]
 
 
 def convert(
@@ -24,6 +26,16 @@ def convert(
     concurrency: int = 4,
     profile: Optional[str] = None,
     allow_docx: bool = False,
+    # Retry options
+    max_retries: int = 3,
+    retry_delay: float = 1.0,
+    # Rate limiting
+    rate_limit_rpm: Optional[int] = None,
+    # Caching
+    enable_cache: bool = False,
+    cache_dir: Optional[str | Path] = None,
+    # Logging
+    log_level: LogLevel = "normal",
 ) -> Path:
     """Convert a document to Markdown using the configured LLM via LiteLLM.
 
@@ -39,6 +51,12 @@ def convert(
     - concurrency: Max parallel LLM calls across page groups
     - profile: Prompt profile name ('contracts', 'generic') or path to a JSON profile
     - allow_docx: Enable DOCX via Word/COM conversion (not recommended; prefer PDFs)
+    - max_retries: Max retry attempts for failed LLM calls (default: 3)
+    - retry_delay: Initial delay between retries in seconds (exponential backoff, default: 1.0)
+    - rate_limit_rpm: Max requests per minute (None = no limit)
+    - enable_cache: Enable response caching to avoid redundant LLM calls
+    - cache_dir: Directory for response cache (defaults to ~/.cache/llm-markdownify)
+    - log_level: Log verbosity: 'quiet', 'normal', 'verbose', 'debug'
 
     Returns
     - Path to the written Markdown file
@@ -52,11 +70,19 @@ def convert(
         temperature=temperature,
         concurrency=concurrency,
         allow_docx=allow_docx,
+        max_retries=max_retries,
+        retry_delay=retry_delay,
+        enable_cache=enable_cache,
+        log_level=log_level,
     )
     if model is not None:
         cfg_kwargs["model"] = model
     if max_tokens is not None:
         cfg_kwargs["max_tokens"] = max_tokens
+    if rate_limit_rpm is not None:
+        cfg_kwargs["rate_limit_rpm"] = rate_limit_rpm
+    if cache_dir is not None:
+        cfg_kwargs["cache_dir"] = Path(cache_dir)
 
     cfg = MarkdownifyConfig(**cfg_kwargs)
     return Markdownifier(cfg, profile=profile).run()

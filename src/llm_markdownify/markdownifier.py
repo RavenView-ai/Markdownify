@@ -10,10 +10,11 @@ from typing import List, Tuple
 
 from tqdm import tqdm
 
+from .cache import configure_cache
 from .config import MarkdownifyConfig
 from .grouping import group_pages
-from .llm import generate_markdown
-from .logging import get_logger
+from .llm import configure_llm, generate_markdown
+from .logging import get_logger, set_log_level
 from .pager import PageImage, load_document_pages
 from .prompt_profiles import load_prompt_profile, PromptProfile
 
@@ -26,6 +27,22 @@ class Markdownifier:
     def __init__(self, config: MarkdownifyConfig, profile: str | None = None) -> None:
         self.config = config
         self.profile: PromptProfile = load_prompt_profile(profile or "contracts")
+
+        # Configure logging level
+        set_log_level(config.log_level)
+
+        # Configure LLM retry and rate limiting
+        configure_llm(
+            max_retries=config.max_retries,
+            retry_delay=config.retry_delay,
+            rate_limit_rpm=config.rate_limit_rpm,
+        )
+
+        # Configure caching
+        configure_cache(
+            cache_dir=config.cache_dir,
+            enabled=config.enable_cache,
+        )
 
     def _render_pages(self) -> List[PageImage]:
         return load_document_pages(
